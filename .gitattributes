@@ -1,0 +1,9 @@
+# Default: keep LF in repo, convert on checkout as needed
+* text=auto
+
+# Force LF for common text files
+*.py  text eol=lf
+*.md  text eol=lf
+*.txt text eol=lf
+*.env* text eol=lf
+*.gitignore text eol=lf
