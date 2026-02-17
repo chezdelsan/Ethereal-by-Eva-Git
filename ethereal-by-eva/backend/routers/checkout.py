@@ -118,8 +118,8 @@ async def create_checkout_session(
             payment_method_types=["card"],
             line_items=line_items,
             mode="payment",
-            success_url="http://localhost:5500/success.html?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url="http://localhost:5500/cart.html",
+            success_url=f"{settings.frontend_url}/success.html?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{settings.frontend_url}/cart.html",
             customer_email=request.email,
             metadata={"order_id": str(order.id), "piece_ids": ",".join(str(p.id) for p in pieces)},
         )

@@ -1,6 +1,7 @@
 """
 Database configuration and session management.
 Uses SQLAlchemy with async support.
+Works with SQLite (local) and PostgreSQL (production).
 """
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -8,10 +9,10 @@ from sqlalchemy.orm import DeclarativeBase
 from config import settings
 
 
-# Create async engine
+# Create async engine using the properly formatted URL
 engine = create_async_engine(
-    settings.database_url,
-    echo=True,  # Set to False in production to reduce logging
+    settings.async_database_url,
+    echo=False,  # Set True for SQL logging
 )
 
 # Session factory
@@ -22,7 +23,6 @@ async_session = async_sessionmaker(
 )
 
 
-# Base class for all models
 class Base(DeclarativeBase):
     pass
 

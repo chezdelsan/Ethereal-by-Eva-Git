@@ -1,0 +1,47 @@
+# Render Blueprint - Deploy with one click
+# https://render.com/docs/blueprint-spec
+
+services:
+  # Backend API
+  - type: web
+    name: ethereal-api
+    runtime: python
+    rootDir: ethereal-by-eva/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ethereal-db
+          property: connectionString
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: FROM_EMAIL
+        value: onboarding@resend.dev
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SHIPPO_API_KEY
+        sync: false
+
+  # Frontend Static Site
+  - type: web
+    name: ethereal-frontend
+    runtime: static
+    rootDir: ethereal-by-eva/frontend
+    buildCommand: echo "No build needed"
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600
+
+databases:
+  - name: ethereal-db
+    plan: free
+    databaseName: ethereal
