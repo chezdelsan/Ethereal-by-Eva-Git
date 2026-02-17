@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop | Ethereal by Eva</title>
+    <meta name="description" content="Browse Eva's collection of unique, handmade art pieces.">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-inner">
+            <a href="/" class="logo">Ethereal by Eva</a>
+            
+            <nav class="nav">
+                <a href="/">Home</a>
+                <a href="browse.html" class="active">Shop</a>
+                <a href="browse.html?category=painting">Paintings</a>
+                <a href="browse.html?category=pastel">Pastels</a>
+            </nav>
+            
+            <div class="header-actions">
+                <a href="cart.html" class="cart-link">
+                    Cart
+                    <span class="cart-count" data-count="0">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Page Header -->
+            <section class="section">
+                <h1 id="page-title">All Pieces</h1>
+                
+                <!-- Category Filters -->
+                <div id="category-filters" class="category-filters">
+                    <button class="category-filter active" data-category="">All</button>
+                    <!-- Categories loaded dynamically -->
+                </div>
+                
+                <!-- Sort Options -->
+                <div style="margin-top: var(--spacing-md);">
+                    <select id="sort-select" style="padding: var(--spacing-sm); border: 1px solid var(--color-border);">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="price_low">Price: Low to High</option>
+                        <option value="price_high">Price: High to Low</option>
+                    </select>
+                </div>
+            </section>
+            
+            <!-- Pieces Grid -->
+            <section class="section">
+                <div id="pieces-grid" class="piece-grid">
+                    <div class="loading">Loading</div>
+                </div>
+                
+                <!-- Pagination -->
+                <div id="pagination" style="text-align: center; margin-top: var(--spacing-xl);"></div>
+            </section>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <p class="footer-text">© 2024 Ethereal by Eva. All pieces are one-of-a-kind.</p>
+            <div class="footer-links">
+                <a href="#">About</a>
+                <a href="#">Contact</a>
+                <a href="#">Shipping</a>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // State
+        let currentCategory = '';
+        let currentSort = 'newest';
+        let currentPage = 1;
+        const perPage = 12;
+        
+        // DOM elements
+        const piecesGrid = document.getElementById('pieces-grid');
+        const categoryFilters = document.getElementById('category-filters');
+        const sortSelect = document.getElementById('sort-select');
+        const pageTitle = document.getElementById('page-title');
+        const pagination = document.getElementById('pagination');
+        
+        /**
+         * Load pieces with current filters
+         */
+        async function loadPieces() {
+            Utils.showLoading(piecesGrid);
+            
+            try {
+                const result = await API.getPieces({
+                    category: currentCategory || undefined,
+                    sort: currentSort,
+                    page: currentPage,
+                    per_page: perPage,
+                });
+                
+                renderPieceGrid(piecesGrid, result.pieces);
+                renderPagination(result.total, result.page, result.per_page);
+                
+                // Update page title
+                if (currentCategory) {
+                    pageTitle.textContent = Utils.getCategoryName(currentCategory);
+                } else {
+                    pageTitle.textContent = 'All Pieces';
+                }
+                
+            } catch (error) {
+                Utils.showError(piecesGrid, 'Unable to load pieces. Please try again.');
+            }
+        }
+        
+        /**
+         * Load and render category filters
+         */
+        async function loadCategories() {
+            try {
+                const categories = await API.getCategories();
+                
+                // Add category buttons (keeping the "All" button)
+                categories.forEach(cat => {
+                    const btn = document.createElement('button');
+                    btn.className = 'category-filter';
+                    btn.dataset.category = cat.slug;
+                    btn.textContent = `${cat.name} (${cat.count})`;
+                    categoryFilters.appendChild(btn);
+                });
+                
+                // Update active state based on URL
+                updateCategoryActiveState();
+                
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+        
+        /**
+         * Update category button active states
+         */
+        function updateCategoryActiveState() {
+            categoryFilters.querySelectorAll('.category-filter').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === currentCategory);
+            });
+        }
+        
+        /**
+         * Render pagination controls
+         */
+        function renderPagination(total, page, perPage) {
+            const totalPages = Math.ceil(total / perPage);
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            if (page > 1) {
+                html += `<button class="btn btn-secondary" onclick="goToPage(${page - 1})">← Previous</button> `;
+            }
+            
+            html += `<span style="margin: 0 var(--spacing-md);">Page ${page} of ${totalPages}</span>`;
+            
+            if (page < totalPages) {
+                html += ` <button class="btn btn-secondary" onclick="goToPage(${page + 1})">Next →</button>`;
+            }
+            
+            pagination.innerHTML = html;
+        }
+        
+        /**
+         * Navigate to a page
+         */
+        function goToPage(page) {
+            currentPage = page;
+            updateURL();
+            loadPieces();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        /**
+         * Update URL with current filters
+         */
+        function updateURL() {
+            const params = new URLSearchParams();
+            if (currentCategory) params.set('category', currentCategory);
+            if (currentSort !== 'newest') params.set('sort', currentSort);
+            if (currentPage > 1) params.set('page', currentPage);
+            
+            const newURL = params.toString() ? `?${params}` : window.location.pathname;
+            history.replaceState(null, '', newURL);
+        }
+        
+        /**
+         * Read initial state from URL
+         */
+        function readURLParams() {
+            const params = Utils.getQueryParams();
+            currentCategory = params.get('category') || '';
+            currentSort = params.get('sort') || 'newest';
+            currentPage = parseInt(params.get('page'), 10) || 1;
+            
+            // Update sort select
+            sortSelect.value = currentSort;
+        }
+        
+        // Event listeners
+        categoryFilters.addEventListener('click', (e) => {
+            if (e.target.classList.contains('category-filter')) {
+                currentCategory = e.target.dataset.category || '';
+                currentPage = 1;
+                updateCategoryActiveState();
+                updateURL();
+                loadPieces();
+            }
+        });
+        
+        sortSelect.addEventListener('change', () => {
+            currentSort = sortSelect.value;
+            currentPage = 1;
+            updateURL();
+            loadPieces();
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            readURLParams();
+            await loadCategories();
+            loadPieces();
+        });
+        
+        // Make goToPage available globally for pagination buttons
+        window.goToPage = goToPage;
+    </script>
+</body>
+</html>

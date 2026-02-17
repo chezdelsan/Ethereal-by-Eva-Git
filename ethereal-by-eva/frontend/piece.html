@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading... | Ethereal by Eva</title>
+    <meta name="description" content="View details of this unique art piece by Eva.">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-inner">
+            <a href="/" class="logo">Ethereal by Eva</a>
+            
+            <nav class="nav">
+                <a href="/">Home</a>
+                <a href="browse.html">Shop</a>
+                <a href="browse.html?category=painting">Paintings</a>
+                <a href="browse.html?category=pastel">Pastels</a>
+            </nav>
+            
+            <div class="header-actions">
+                <a href="cart.html" class="cart-link">
+                    Cart
+                    <span class="cart-count" data-count="0">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Breadcrumb -->
+            <nav style="margin-bottom: var(--spacing-xl); font-size: var(--font-size-sm); color: var(--color-text-light);">
+                <a href="/">Home</a> / 
+                <a href="browse.html">Shop</a> / 
+                <span id="breadcrumb-category"></span>
+            </nav>
+            
+            <!-- Piece Detail -->
+            <div id="piece-content">
+                <div class="loading">Loading</div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <p class="footer-text">© 2024 Ethereal by Eva. All pieces are one-of-a-kind.</p>
+            <div class="footer-links">
+                <a href="#">About</a>
+                <a href="#">Contact</a>
+                <a href="#">Shipping</a>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/gallery.js"></script>
+    <script>
+        // Current piece data
+        let piece = null;
+        
+        /**
+         * Render piece detail
+         */
+        function renderPiece(piece) {
+            const content = document.getElementById('piece-content');
+            const inCart = Cart.hasItem(piece.id);
+            
+            content.innerHTML = `
+                <div class="piece-detail">
+                    <!-- Gallery -->
+                    <div class="piece-gallery">
+                        <div class="piece-gallery-main" id="gallery-main">
+                            <!-- Main image loaded by Gallery.js -->
+                        </div>
+                        <div class="piece-gallery-thumbs" id="gallery-thumbs">
+                            <!-- Thumbnails loaded by Gallery.js -->
+                        </div>
+                    </div>
+                    
+                    <!-- Info -->
+                    <div class="piece-info">
+                        <h1>${piece.title}</h1>
+                        <p class="piece-price">${Utils.formatPrice(piece.price)}</p>
+                        
+                        <p class="piece-description">${piece.description}</p>
+                        
+                        <dl class="piece-meta">
+                            <dt>Category:</dt>
+                            <dd><a href="browse.html?category=${piece.category}">${Utils.getCategoryName(piece.category)}</a></dd>
+                            ${piece.dimensions ? `<dt>Dimensions:</dt><dd>${piece.dimensions}</dd>` : ''}
+                        </dl>
+                        
+                        ${piece.is_sold ? `
+                            <button class="btn btn-primary btn-full" disabled>Sold</button>
+                            <p style="text-align: center; margin-top: var(--spacing-md); color: var(--color-text-light);">
+                                This piece has found a new home.
+                            </p>
+                        ` : `
+                            <button 
+                                id="add-to-cart-btn"
+                                class="btn ${inCart ? 'btn-secondary' : 'btn-primary'} btn-full"
+                                ${inCart ? 'disabled' : ''}
+                            >
+                                ${inCart ? 'In Your Cart' : 'Add to Cart'}
+                            </button>
+                            <p style="text-align: center; margin-top: var(--spacing-md); color: var(--color-text-light);">
+                                One-of-a-kind. Once it's gone, it's gone forever.
+                            </p>
+                        `}
+                    </div>
+                </div>
+            `;
+            
+            // Initialize gallery
+            Gallery.init('#gallery-main', '#gallery-thumbs', piece.images);
+            
+            // Bind add to cart button
+            const addBtn = document.getElementById('add-to-cart-btn');
+            if (addBtn && !piece.is_sold) {
+                addBtn.addEventListener('click', () => addToCart(piece));
+            }
+        }
+        
+        /**
+         * Add piece to cart
+         */
+        function addToCart(piece) {
+            const result = Cart.addItem(piece);
+            
+            if (result.success) {
+                // Update button
+                const btn = document.getElementById('add-to-cart-btn');
+                btn.textContent = 'In Your Cart';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+                btn.disabled = true;
+                
+                // Show feedback (could be a toast/notification)
+                console.log('Added to cart:', piece.title);
+            } else {
+                alert(result.message);
+            }
+        }
+        
+        /**
+         * Load piece data
+         */
+        async function loadPiece() {
+            const pieceId = Utils.getQueryParam('id');
+            
+            if (!pieceId) {
+                Utils.showError(document.getElementById('piece-content'), 'No piece specified.');
+                return;
+            }
+            
+            try {
+                piece = await API.getPiece(pieceId);
+                
+                // Update page title
+                document.title = `${piece.title} | Ethereal by Eva`;
+                
+                // Update breadcrumb
+                document.getElementById('breadcrumb-category').innerHTML = 
+                    `<a href="browse.html?category=${piece.category}">${Utils.getCategoryName(piece.category)}</a> / ${piece.title}`;
+                
+                // Render piece
+                renderPiece(piece);
+                
+            } catch (error) {
+                Utils.showError(document.getElementById('piece-content'), 'Piece not found.');
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadPiece);
+    </script>
+</body>
+</html>

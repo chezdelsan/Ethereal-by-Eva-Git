@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Ethereal by Eva</title>
+    <meta name="description" content="Complete your purchase.">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Checkout-specific styles */
+        .checkout-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: var(--spacing-3xl);
+        }
+        
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 1px solid var(--color-border);
+            font-family: inherit;
+            font-size: var(--font-size-base);
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+        }
+        
+        .order-items {
+            border-top: 1px solid var(--color-border);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .order-item {
+            display: flex;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .order-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+        }
+        
+        .order-item-info {
+            flex: 1;
+        }
+        
+        .order-item-title {
+            font-size: var(--font-size-sm);
+        }
+        
+        .order-item-price {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-light);
+        }
+        
+        @media (max-width: 768px) {
+            .checkout-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header (simplified for checkout) -->
+    <header class="header">
+        <div class="container header-inner">
+            <a href="/" class="logo">Ethereal by Eva</a>
+            <a href="cart.html" style="font-size: var(--font-size-sm);">← Back to Cart</a>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <h1 style="margin-bottom: var(--spacing-xl);">Checkout</h1>
+            
+            <div id="checkout-content">
+                <div class="loading">Loading</div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <p class="footer-text">© 2024 Ethereal by Eva. Secure checkout.</p>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        const checkoutContent = document.getElementById('checkout-content');
+        let cartItems = [];
+        let subtotal = 0;
+        let shippingCost = 1295; // Placeholder: $12.95
+        
+        /**
+         * Render checkout form
+         */
+        function renderCheckout(items) {
+            cartItems = items;
+            subtotal = items.reduce((sum, item) => sum + item.price, 0);
+            const total = subtotal + shippingCost;
+            
+            checkoutContent.innerHTML = `
+                <div class="checkout-layout">
+                    <!-- Shipping Form -->
+                    <div>
+                        <h2 style="margin-bottom: var(--spacing-lg);">Shipping Information</h2>
+                        
+                        <form id="checkout-form">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" required 
+                                       placeholder="your@email.com">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="name">Full Name</label>
+                                <input type="text" id="name" name="name" required 
+                                       placeholder="John Doe">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">Phone (optional)</label>
+                                <input type="tel" id="phone" name="phone" 
+                                       placeholder="(555) 123-4567">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="street">Street Address</label>
+                                <input type="text" id="street" name="street" required 
+                                       placeholder="123 Main St">
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="city">City</label>
+                                    <input type="text" id="city" name="city" required 
+                                           placeholder="New York">
+                                </div>
+                                <div class="form-group">
+                                    <label for="state">State</label>
+                                    <input type="text" id="state" name="state" required 
+                                           placeholder="NY" maxlength="2">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="zip">ZIP Code</label>
+                                    <input type="text" id="zip" name="zip" required 
+                                           placeholder="10001">
+                                </div>
+                                <div class="form-group">
+                                    <label for="country">Country</label>
+                                    <select id="country" name="country">
+                                        <option value="US" selected>United States</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-full" style="margin-top: var(--spacing-lg);">
+                                Continue to Payment
+                            </button>
+                        </form>
+                        
+                        <p style="margin-top: var(--spacing-lg); text-align: center; color: var(--color-text-light); font-size: var(--font-size-sm);">
+                            🔒 Secure checkout powered by Stripe
+                        </p>
+                    </div>
+                    
+                    <!-- Order Summary -->
+                    <div class="cart-summary">
+                        <h2>Order Summary</h2>
+                        
+                        <div class="order-items">
+                            ${items.map(item => `
+                                <div class="order-item">
+                                    <img src="${item.image_url || 'https://via.placeholder.com/60?text=Art'}" 
+                                         alt="${item.title}">
+                                    <div class="order-item-info">
+                                        <p class="order-item-title">${item.title}</p>
+                                        <p class="order-item-price">${Utils.formatPrice(item.price)}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="cart-summary-row">
+                            <span>Subtotal</span>
+                            <span>${Utils.formatPrice(subtotal)}</span>
+                        </div>
+                        <div class="cart-summary-row">
+                            <span>Shipping (USPS Priority)</span>
+                            <span>${Utils.formatPrice(shippingCost)}</span>
+                        </div>
+                        <div class="cart-summary-row total">
+                            <span>Total</span>
+                            <span>${Utils.formatPrice(total)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Bind form submit
+            document.getElementById('checkout-form').addEventListener('submit', handleSubmit);
+        }
+        
+        /**
+         * Handle form submission
+         */
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            
+            // Collect form data
+            const formData = {
+                email: form.email.value,
+                name: form.name.value,
+                phone: form.phone.value || null,
+                address: {
+                    name: form.name.value,
+                    street: form.street.value,
+                    city: form.city.value,
+                    state: form.state.value,
+                    zip: form.zip.value,
+                    country: form.country.value,
+                },
+                piece_ids: cartItems.map(item => item.piece_id),
+            };
+            
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            
+            try {
+                const result = await API.createCheckout(formData);
+                
+                // Redirect to Stripe checkout
+                window.location.href = result.checkout_url;
+                
+            } catch (error) {
+                alert('Checkout error: ' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Continue to Payment';
+            }
+        }
+        
+        /**
+         * Load checkout
+         */
+        async function loadCheckout() {
+            const items = Cart.getItems();
+            
+            if (items.length === 0) {
+                checkoutContent.innerHTML = `
+                    <div class="cart-empty">
+                        <p>Your cart is empty.</p>
+                        <a href="browse.html" class="btn btn-primary">Continue Shopping</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Validate cart before checkout
+            try {
+                const pieceIds = items.map(item => item.piece_id);
+                const validated = await API.validateCart(pieceIds);
+                renderCheckout(validated.items);
+            } catch (error) {
+                alert('Some items are no longer available. Returning to cart.');
+                window.location.href = 'cart.html';
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadCheckout);
+    </script>
+</body>
+</html>

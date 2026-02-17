@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed | Ethereal by Eva</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .success-container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-lg);
+        }
+        .order-details {
+            text-align: left;
+            border: 1px solid var(--color-border);
+            padding: var(--spacing-xl);
+            margin-top: var(--spacing-xl);
+        }
+        .order-details h3 {
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 1px solid var(--color-border);
+        }
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-sm);
+        }
+        .order-row.total {
+            font-weight: bold;
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--color-border);
+        }
+        .order-items {
+            margin: var(--spacing-lg) 0;
+        }
+        .order-item {
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container header-inner">
+            <a href="/" class="logo">Ethereal by Eva</a>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="success-container">
+                <div id="success-content">
+                    <div class="loading">Loading order details...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="footer">
+        <div class="container footer-inner">
+            <p class="footer-text">© 2024 Ethereal by Eva. Thank you for your purchase!</p>
+        </div>
+    </footer>
+    
+    <script src="js/api.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        async function loadOrderDetails() {
+            const params = new URLSearchParams(window.location.search);
+            const sessionId = params.get('session_id');
+            
+            if (!sessionId) {
+                document.getElementById('success-content').innerHTML = `
+                    <div class="success-icon">❌</div>
+                    <h1>Something went wrong</h1>
+                    <p>No order information found.</p>
+                    <a href="/" class="btn btn-primary">Return Home</a>
+                `;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API.baseUrl}/api/order/${sessionId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Order not found');
+                }
+                
+                const order = await response.json();
+                
+                // Clear the cart since purchase was successful
+                Cart.clear();
+                
+                document.getElementById('success-content').innerHTML = `
+                    <div class="success-icon">✓</div>
+                    <h1>Thank You!</h1>
+                    <p>Your order has been confirmed. A confirmation email will be sent to <strong>${order.customer_email}</strong>.</p>
+                    
+                    <div class="order-details">
+                        <h3>Order #${order.id}</h3>
+                        
+                        <div class="order-items">
+                            ${order.items.map(item => `
+                                <div class="order-item">
+                                    <div class="order-row">
+                                        <span>${item.title}</span>
+                                        <span>${Utils.formatPrice(item.price)}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="order-row">
+                            <span>Subtotal</span>
+                            <span>${Utils.formatPrice(order.subtotal)}</span>
+                        </div>
+                        <div class="order-row">
+                            <span>Shipping</span>
+                            <span>${Utils.formatPrice(order.shipping_cost)}</span>
+                        </div>
+                        <div class="order-row total">
+                            <span>Total</span>
+                            <span>${Utils.formatPrice(order.total)}</span>
+                        </div>
+                        
+                        <h3 style="margin-top: var(--spacing-xl);">Shipping To</h3>
+                        <p>
+                            ${order.shipping_address.name}<br>
+                            ${order.shipping_address.street}<br>
+                            ${order.shipping_address.city}, ${order.shipping_address.state} ${order.shipping_address.zip}
+                        </p>
+                    </div>
+                    
+                    <a href="/" class="btn btn-primary" style="margin-top: var(--spacing-xl);">Continue Shopping</a>
+                `;
+                
+            } catch (error) {
+                document.getElementById('success-content').innerHTML = `
+                    <div class="success-icon">⏳</div>
+                    <h1>Processing Your Order</h1>
+                    <p>Your payment was received! We're processing your order details.</p>
+                    <p style="color: var(--color-text-light);">You'll receive a confirmation email shortly.</p>
+                    <a href="/" class="btn btn-primary" style="margin-top: var(--spacing-xl);">Continue Shopping</a>
+                `;
+                
+                // Still clear the cart
+                Cart.clear();
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadOrderDetails);
+    </script>
+</body>
+</html>

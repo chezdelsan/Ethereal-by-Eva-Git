@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethereal by Eva | One-of-a-Kind Art</title>
+    <meta name="description" content="Discover unique, handmade art pieces by Eva. Each work is one-of-a-kind, crafted with love.">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-inner">
+            <a href="/" class="logo">Ethereal by Eva</a>
+            
+            <nav class="nav">
+                <a href="/" class="active">Home</a>
+                <a href="browse.html">Shop</a>
+                <a href="browse.html?category=painting">Paintings</a>
+                <a href="browse.html?category=pastel">Pastels</a>
+            </nav>
+            
+            <div class="header-actions">
+                <a href="cart.html" class="cart-link">
+                    Cart
+                    <span class="cart-count" data-count="0">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <h1>One-of-a-Kind Art</h1>
+                <p>Every piece is unique. When it's gone, it's gone forever.</p>
+            </div>
+        </section>
+        
+        <!-- Featured Pieces -->
+        <section class="section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Featured</h2>
+                    <a href="browse.html?featured=true">View All →</a>
+                </div>
+                <div id="featured-grid" class="piece-grid">
+                    <div class="loading">Loading</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- New Drops -->
+        <section class="section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>New Drops</h2>
+                    <a href="browse.html?sort=newest">View All →</a>
+                </div>
+                <div id="new-grid" class="piece-grid">
+                    <div class="loading">Loading</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Categories -->
+        <section class="section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Shop by Category</h2>
+                </div>
+                <div id="categories" class="category-filters">
+                    <div class="loading">Loading</div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <p class="footer-text">© 2024 Ethereal by Eva. All pieces are one-of-a-kind.</p>
+            <div class="footer-links">
+                <a href="#">About</a>
+                <a href="#">Contact</a>
+                <a href="#">Shipping</a>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Load page content
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load featured pieces
+            try {
+                const featured = await API.getFeaturedPieces(6);
+                const featuredGrid = document.getElementById('featured-grid');
+                renderPieceGrid(featuredGrid, featured);
+            } catch (error) {
+                console.error('Error loading featured:', error);
+                document.getElementById('featured-grid').innerHTML = 
+                    '<p class="text-light">Unable to load featured pieces</p>';
+            }
+            
+            // Load new pieces
+            try {
+                const newPieces = await API.getNewPieces(6);
+                const newGrid = document.getElementById('new-grid');
+                renderPieceGrid(newGrid, newPieces);
+            } catch (error) {
+                console.error('Error loading new pieces:', error);
+                document.getElementById('new-grid').innerHTML = 
+                    '<p class="text-light">Unable to load new pieces</p>';
+            }
+            
+            // Load categories
+            try {
+                const categories = await API.getCategories();
+                const categoriesContainer = document.getElementById('categories');
+                
+                categoriesContainer.innerHTML = categories.map(cat => `
+                    <a href="browse.html?category=${cat.slug}" class="category-filter">
+                        ${cat.name} (${cat.count})
+                    </a>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                document.getElementById('categories').innerHTML = 
+                    '<p class="text-light">Unable to load categories</p>';
+            }
+        });
+    </script>
+</body>
+</html>
