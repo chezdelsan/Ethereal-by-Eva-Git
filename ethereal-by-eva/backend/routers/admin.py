@@ -1,8 +1,9 @@
 """
-Admin API routes for managing inventory.
+Admin API routes for managing inventory and orders.
 Protected by simple password authentication.
 """
 
+from datetime import datetime
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy import select
@@ -10,29 +11,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from database import get_db
-from models import Piece, PieceImage, Order
-from schemas import (
-    PieceCreate, 
-    PieceUpdate, 
-    PieceResponse, 
-    OrderResponse,
-    OrderUpdateAdmin
-)
+from models import Piece, PieceImage, Order, OrderItem
+from schemas import PieceCreate, PieceUpdate, PieceResponse, OrderResponse, OrderUpdateAdmin
 from config import settings
+from email_service import send_shipping_notification
 
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
 async def verify_admin(x_admin_password: str = Header(...)):
-    """
-    Simple password authentication for admin routes.
-    In production, use proper authentication!
-    """
+    """Simple password authentication for admin routes."""
     if x_admin_password != settings.admin_password:
         raise HTTPException(status_code=401, detail="Invalid admin password")
     return True
 
+
+# =============================================================================
+# PIECES
+# =============================================================================
 
 @router.get("/pieces", response_model=List[PieceResponse])
 async def admin_list_pieces(
@@ -40,14 +37,9 @@ async def admin_list_pieces(
     _: bool = Depends(verify_admin)
 ):
     """List all pieces (including sold ones) for admin."""
-    query = (
-        select(Piece)
-        .options(selectinload(Piece.images))
-        .order_by(Piece.created_at.desc())
-    )
+    query = select(Piece).options(selectinload(Piece.images)).order_by(Piece.created_at.desc())
     result = await db.execute(query)
     pieces = result.scalars().all()
-    
     return [PieceResponse.model_validate(p) for p in pieces]
 
 
@@ -67,16 +59,13 @@ async def create_piece(
         weight_oz=piece_data.weight_oz,
         is_featured=piece_data.is_featured,
     )
-    
     db.add(piece)
     await db.commit()
     await db.refresh(piece)
     
-    # Reload with images relationship
     query = select(Piece).options(selectinload(Piece.images)).where(Piece.id == piece.id)
     result = await db.execute(query)
     piece = result.scalar_one()
-    
     return PieceResponse.model_validate(piece)
 
 
@@ -95,14 +84,12 @@ async def update_piece(
     if not piece:
         raise HTTPException(status_code=404, detail="Piece not found")
     
-    # Update only provided fields
     update_data = piece_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(piece, field, value)
     
     await db.commit()
     await db.refresh(piece)
-    
     return PieceResponse.model_validate(piece)
 
 
@@ -112,7 +99,7 @@ async def delete_piece(
     db: AsyncSession = Depends(get_db),
     _: bool = Depends(verify_admin)
 ):
-    """Delete a piece (use with caution!)."""
+    """Delete a piece."""
     query = select(Piece).where(Piece.id == piece_id)
     result = await db.execute(query)
     piece = result.scalar_one_or_none()
@@ -122,7 +109,6 @@ async def delete_piece(
     
     await db.delete(piece)
     await db.commit()
-    
     return {"message": "Piece deleted successfully"}
 
 
@@ -136,7 +122,6 @@ async def add_piece_image(
     _: bool = Depends(verify_admin)
 ):
     """Add an image to a piece."""
-    # Verify piece exists
     query = select(Piece).where(Piece.id == piece_id)
     result = await db.execute(query)
     piece = result.scalar_one_or_none()
@@ -144,19 +129,16 @@ async def add_piece_image(
     if not piece:
         raise HTTPException(status_code=404, detail="Piece not found")
     
-    # Get current max display order
     img_query = select(PieceImage).where(PieceImage.piece_id == piece_id)
     img_result = await db.execute(img_query)
     existing_images = img_result.scalars().all()
     
     display_order = len(existing_images)
     
-    # If this is marked as primary, unmark others
     if is_primary:
         for img in existing_images:
             img.is_primary = False
     
-    # If no images yet, make this one primary
     if not existing_images:
         is_primary = True
     
@@ -167,11 +149,9 @@ async def add_piece_image(
         display_order=display_order,
         alt_text=alt_text
     )
-    
     db.add(image)
     await db.commit()
     await db.refresh(image)
-    
     return {"message": "Image added", "image_id": image.id}
 
 
@@ -183,10 +163,7 @@ async def delete_piece_image(
     _: bool = Depends(verify_admin)
 ):
     """Remove an image from a piece."""
-    query = select(PieceImage).where(
-        PieceImage.id == image_id,
-        PieceImage.piece_id == piece_id
-    )
+    query = select(PieceImage).where(PieceImage.id == image_id, PieceImage.piece_id == piece_id)
     result = await db.execute(query)
     image = result.scalar_one_or_none()
     
@@ -195,12 +172,11 @@ async def delete_piece_image(
     
     await db.delete(image)
     await db.commit()
-    
     return {"message": "Image deleted"}
 
 
 # =============================================================================
-# ORDER MANAGEMENT
+# ORDERS
 # =============================================================================
 
 @router.get("/orders", response_model=List[OrderResponse])
@@ -210,32 +186,12 @@ async def admin_list_orders(
     _: bool = Depends(verify_admin)
 ):
     """List all orders for admin."""
-    query = select(Order).order_by(Order.created_at.desc())
-    
+    query = select(Order).options(selectinload(Order.items)).order_by(Order.created_at.desc())
     if status:
         query = query.where(Order.status == status)
-    
     result = await db.execute(query)
     orders = result.scalars().all()
-    
     return [OrderResponse.model_validate(o) for o in orders]
-
-
-@router.get("/orders/{order_id}", response_model=OrderResponse)
-async def admin_get_order(
-    order_id: int,
-    db: AsyncSession = Depends(get_db),
-    _: bool = Depends(verify_admin)
-):
-    """Get a single order with details."""
-    query = select(Order).where(Order.id == order_id)
-    result = await db.execute(query)
-    order = result.scalar_one_or_none()
-    
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-    
-    return OrderResponse.model_validate(order)
 
 
 @router.put("/orders/{order_id}", response_model=OrderResponse)
@@ -245,13 +201,20 @@ async def admin_update_order(
     db: AsyncSession = Depends(get_db),
     _: bool = Depends(verify_admin)
 ):
-    """Update order status or tracking info."""
-    query = select(Order).where(Order.id == order_id)
+    """Update order status or tracking info. Sends shipping email automatically."""
+    query = select(Order).options(selectinload(Order.items)).where(Order.id == order_id)
     result = await db.execute(query)
     order = result.scalar_one_or_none()
     
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Check if we're marking as shipped (status changing to 'shipped')
+    is_shipping = (
+        update_data.status == "shipped" and 
+        order.status != "shipped" and
+        update_data.tracking_number
+    )
     
     # Update fields
     if update_data.status:
@@ -261,7 +224,25 @@ async def admin_update_order(
     if update_data.shipping_carrier:
         order.shipping_carrier = update_data.shipping_carrier
     
+    # Set shipped timestamp
+    if update_data.status == "shipped" and not order.shipped_at:
+        order.shipped_at = datetime.utcnow()
+    
     await db.commit()
     await db.refresh(order)
+    
+    # Send shipping notification email
+    if is_shipping:
+        order_data = {
+            "id": order.id,
+            "customer_name": order.customer_name,
+            "customer_email": order.customer_email,
+            "shipping_address": order.shipping_address,
+        }
+        send_shipping_notification(
+            order_data, 
+            update_data.tracking_number,
+            update_data.shipping_carrier or "USPS"
+        )
     
     return OrderResponse.model_validate(order)

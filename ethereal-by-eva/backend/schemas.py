@@ -182,11 +182,11 @@ class OrderUpdateAdmin(BaseModel):
 # =============================================================================
 
 # Valid categories
-VALID_CATEGORIES = ["painting", "pastel", "crayon", "marker", "paper_mache"]
+VALID_CATEGORIES = ["painting"]
 
 
 class CategoryInfo(BaseModel):
-    """Information about a category."""
+    """Information about the only available category: painting."""
     slug: str
     name: str
     count: int

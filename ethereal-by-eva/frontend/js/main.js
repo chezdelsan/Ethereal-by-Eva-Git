@@ -99,15 +99,11 @@ const Utils = {
      * @param {string} slug
      * @returns {string}
      */
-    getCategoryName(slug) {
-        const names = {
-            painting: 'Paintings',
-            pastel: 'Pastels',
-            crayon: 'Crayon Art',
-            marker: 'Marker Art',
-            paper_mache: 'Paper Maché',
-        };
-        return names[slug] || slug;
+        getCategoryName(slug) {
+            const names = {
+                painting: 'Paintings',
+            };
+            return names[slug] || 'Art Pieces';
     },
 };
 

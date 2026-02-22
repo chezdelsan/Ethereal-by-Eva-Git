@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Ethereal by Eva</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { background: #f5f5f5; }
+        
+        .admin-nav {
+            background: #000;
+            color: #fff;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .admin-nav h1 { font-size: 1.2rem; font-weight: 400; }
+        .admin-nav a { color: #fff; margin-left: 2rem; font-size: 0.9rem; }
+        
+        .admin-container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: #fff;
+            padding: 1.5rem;
+            border: 1px solid #ddd;
+        }
+        .stat-card h3 { font-size: 0.8rem; color: #666; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .stat-card .number { font-size: 2rem; font-weight: 300; }
+        
+        .admin-section {
+            background: #fff;
+            border: 1px solid #ddd;
+            margin-bottom: 2rem;
+        }
+        .admin-section-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .admin-section-header h2 { font-size: 1rem; font-weight: 500; }
+        
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .admin-table th, .admin-table td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .admin-table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #666;
+            font-weight: 500;
+        }
+        .admin-table tr:hover { background: #fafafa; }
+        .admin-table img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .badge-sold { background: #000; color: #fff; }
+        .badge-available { background: #e8f5e9; color: #2e7d32; }
+        .badge-featured { background: #fff3e0; color: #e65100; }
+        .badge-pending { background: #fff3e0; color: #e65100; }
+        .badge-paid { background: #e8f5e9; color: #2e7d32; }
+        .badge-shipped { background: #e3f2fd; color: #1565c0; }
+        
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            border: 1px solid #000;
+            background: #fff;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+        .btn-small:hover { background: #000; color: #fff; }
+        .btn-small.danger { border-color: #c00; color: #c00; }
+        .btn-small.danger:hover { background: #c00; color: #fff; }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .modal.active { display: flex; justify-content: center; align-items: flex-start; padding: 2rem; }
+        .modal-content {
+            background: #fff;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 2rem;
+        }
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h2 { font-size: 1.2rem; font-weight: 400; }
+        .modal-close { font-size: 1.5rem; cursor: pointer; background: none; border: none; }
+        .modal-body { padding: 1.5rem; }
+        
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .form-group small { color: #666; font-size: 0.8rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .form-checkbox input { width: auto; }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background: #fff;
+            border: 1px solid #ddd;
+        }
+        .login-container h1 { margin-bottom: 1.5rem; font-weight: 400; }
+        
+        .tabs { display: flex; border-bottom: 1px solid #ddd; }
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+        .tab.active { border-bottom-color: #000; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .empty-state { padding: 3rem; text-align: center; color: #666; }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen">
+        <div class="login-container">
+            <h1>Ethereal by Eva</h1>
+            <p style="margin-bottom: 1.5rem; color: #666;">Admin Dashboard</p>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="admin-password" placeholder="Enter admin password">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="login()">Login</button>
+            <p id="login-error" style="color: #c00; margin-top: 1rem; display: none;">Invalid password</p>
+        </div>
+    </div>
+    
+    <!-- Admin Dashboard (hidden until login) -->
+    <div id="admin-dashboard" style="display: none;">
+        <nav class="admin-nav">
+            <h1>✨ Ethereal by Eva - Admin</h1>
+            <div>
+                <a href="/" target="_blank">View Store →</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </div>
+        </nav>
+        
+        <div class="admin-container">
+            <!-- Stats -->
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <h3>Total Pieces</h3>
+                    <div class="number" id="stat-total">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Available</h3>
+                    <div class="number" id="stat-available">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Sold</h3>
+                    <div class="number" id="stat-sold">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Revenue</h3>
+                    <div class="number" id="stat-revenue">-</div>
+                </div>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" data-tab="pieces">Art Pieces</div>
+                <div class="tab" data-tab="orders">Orders</div>
+            </div>
+            
+            <!-- Pieces Tab -->
+            <div id="tab-pieces" class="tab-content active">
+                <div class="admin-section">
+                    <div class="admin-section-header">
+                        <h2>All Pieces</h2>
+                        <button class="btn btn-primary" onclick="openAddModal()">+ Add New Piece</button>
+                    </div>
+                    <div id="pieces-table">
+                        <div class="loading" style="padding: 2rem; text-align: center;">Loading...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Orders Tab -->
+            <div id="tab-orders" class="tab-content">
+                <div class="admin-section">
+                    <div class="admin-section-header">
+                        <h2>All Orders</h2>
+                    </div>
+                    <div id="orders-table">
+                        <div class="loading" style="padding: 2rem; text-align: center;">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Piece Modal -->
+    <div id="piece-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Add New Piece</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="piece-form" onsubmit="savePiece(event)">
+                    <input type="hidden" id="piece-id">
+                    
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input type="text" id="piece-title" required placeholder="e.g., Sunset Dreams">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description *</label>
+                        <textarea id="piece-description" required placeholder="Describe the piece, its inspiration, medium used..."></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Price (in dollars) *</label>
+                            <input type="number" id="piece-price" required min="1" step="0.01" placeholder="150.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="piece-category" required>
+                                <option value="">Select category</option>
+                                <option value="painting">Painting</option>
+                                <option value="pastel">Pastel</option>
+                                <option value="crayon">Crayon</option>
+                                <option value="marker">Marker</option>
+                                <option value="paper_mache">Paper Maché</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Dimensions</label>
+                            <input type="text" id="piece-dimensions" placeholder="e.g., 18x24 inches">
+                        </div>
+                        <div class="form-group">
+                            <label>Weight (ounces)</label>
+                            <input type="number" id="piece-weight" min="1" value="16" placeholder="16">
+                            <small>For shipping calculation</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Image URL *</label>
+                        <input type="url" id="piece-image" required placeholder="https://...">
+                        <small>Upload image to <a href="https://imgur.com" target="_blank">Imgur</a> or <a href="https://imgbb.com" target="_blank">ImgBB</a> and paste the direct link</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-checkbox">
+                            <input type="checkbox" id="piece-featured">
+                            Feature on homepage
+                        </label>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">Save Piece</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Order Detail Modal -->
+    <div id="order-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Order Details</h2>
+                <button class="modal-close" onclick="closeOrderModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="order-detail-content">
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        let adminPassword = '';
+        let allPieces = [];
+        let allOrders = [];
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // Login
+        function login() {
+            adminPassword = document.getElementById('admin-password').value;
+            
+            // Test the password by making an admin API call
+            fetch(`${API.baseUrl}/api/admin/pieces`, {
+                headers: { 'X-Admin-Password': adminPassword }
+            })
+            .then(res => {
+                if (res.ok) {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('admin-dashboard').style.display = 'block';
+                    localStorage.setItem('adminPassword', adminPassword);
+                    loadDashboard();
+                } else {
+                    document.getElementById('login-error').style.display = 'block';
+                }
+            })
+            .catch(() => {
+                document.getElementById('login-error').style.display = 'block';
+            });
+        }
+        
+        function logout() {
+            localStorage.removeItem('adminPassword');
+            location.reload();
+        }
+        
+        // Check for saved password
+        document.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('adminPassword');
+            if (saved) {
+                adminPassword = saved;
+                document.getElementById('admin-password').value = saved;
+                login();
+            }
+            
+            // Enter key to login
+            document.getElementById('admin-password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
+        });
+        
+        // Load dashboard data
+        async function loadDashboard() {
+            await Promise.all([loadPieces(), loadOrders()]);
+            updateStats();
+        }
+        
+        async function loadPieces() {
+            try {
+                const res = await fetch(`${API.baseUrl}/api/admin/pieces`, {
+                    headers: { 'X-Admin-Password': adminPassword }
+                });
+                allPieces = await res.json();
+                renderPiecesTable();
+            } catch (e) {
+                console.error('Failed to load pieces:', e);
+            }
+        }
+        
+        async function loadOrders() {
+            try {
+                const res = await fetch(`${API.baseUrl}/api/admin/orders`, {
+                    headers: { 'X-Admin-Password': adminPassword }
+                });
+                allOrders = await res.json();
+                renderOrdersTable();
+            } catch (e) {
+                console.error('Failed to load orders:', e);
+            }
+        }
+        
+        function updateStats() {
+            const available = allPieces.filter(p => !p.is_sold).length;
+            const sold = allPieces.filter(p => p.is_sold).length;
+            const revenue = allOrders
+                .filter(o => o.status === 'paid' || o.status === 'shipped')
+                .reduce((sum, o) => sum + o.total, 0);
+            
+            document.getElementById('stat-total').textContent = allPieces.length;
+            document.getElementById('stat-available').textContent = available;
+            document.getElementById('stat-sold').textContent = sold;
+            document.getElementById('stat-revenue').textContent = Utils.formatPrice(revenue);
+        }
+        
+        function renderPiecesTable() {
+            if (allPieces.length === 0) {
+                document.getElementById('pieces-table').innerHTML = `
+                    <div class="empty-state">
+                        <p>No pieces yet. Add your first piece!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const html = `
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${allPieces.map(piece => {
+                            const img = piece.images?.[0]?.image_url || 'https://via.placeholder.com/60?text=No+Image';
+                            return `
+                                <tr>
+                                    <td><img src="${img}" alt="${piece.title}"></td>
+                                    <td>
+                                        <strong>${piece.title}</strong>
+                                        ${piece.is_featured ? '<span class="badge badge-featured">Featured</span>' : ''}
+                                    </td>
+                                    <td>${piece.category}</td>
+                                    <td>${Utils.formatPrice(piece.price)}</td>
+                                    <td>
+                                        ${piece.is_sold 
+                                            ? '<span class="badge badge-sold">Sold</span>' 
+                                            : '<span class="badge badge-available">Available</span>'}
+                                    </td>
+                                    <td>
+                                        <button class="btn-small" onclick="editPiece(${piece.id})">Edit</button>
+                                        ${piece.is_sold 
+                                            ? `<button class="btn-small" onclick="markAvailable(${piece.id})">Mark Available</button>`
+                                            : `<button class="btn-small" onclick="markSold(${piece.id})">Mark Sold</button>`}
+                                        <button class="btn-small danger" onclick="deletePiece(${piece.id})">Delete</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('pieces-table').innerHTML = html;
+        }
+        
+        function renderOrdersTable() {
+            if (allOrders.length === 0) {
+                document.getElementById('orders-table').innerHTML = `
+                    <div class="empty-state">
+                        <p>No orders yet. They'll show up here when customers purchase!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const html = `
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${allOrders.map(order => `
+                            <tr>
+                                <td>#${order.id}</td>
+                                <td>${new Date(order.created_at).toLocaleDateString()}</td>
+                                <td>
+                                    <strong>${order.customer_name}</strong><br>
+                                    <small>${order.customer_email}</small>
+                                </td>
+                                <td>${Utils.formatPrice(order.total)}</td>
+                                <td><span class="badge badge-${order.status}">${order.status}</span></td>
+                                <td>
+                                    <button class="btn-small" onclick="viewOrder(${order.id})">View</button>
+                                    ${order.status === 'paid' 
+                                        ? `<button class="btn-small" onclick="markShipped(${order.id})">Mark Shipped</button>`
+                                        : ''}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('orders-table').innerHTML = html;
+        }
+        
+        // Piece Modal
+        function openAddModal() {
+            document.getElementById('modal-title').textContent = 'Add New Piece';
+            document.getElementById('piece-form').reset();
+            document.getElementById('piece-id').value = '';
+            document.getElementById('piece-weight').value = '16';
+            document.getElementById('piece-modal').classList.add('active');
+        }
+        
+        function editPiece(id) {
+            const piece = allPieces.find(p => p.id === id);
+            if (!piece) return;
+            
+            document.getElementById('modal-title').textContent = 'Edit Piece';
+            document.getElementById('piece-id').value = piece.id;
+            document.getElementById('piece-title').value = piece.title;
+            document.getElementById('piece-description').value = piece.description;
+            document.getElementById('piece-price').value = (piece.price / 100).toFixed(2);
+            document.getElementById('piece-category').value = piece.category;
+            document.getElementById('piece-dimensions').value = piece.dimensions || '';
+            document.getElementById('piece-weight').value = piece.weight_oz;
+            document.getElementById('piece-image').value = piece.images?.[0]?.image_url || '';
+            document.getElementById('piece-featured').checked = piece.is_featured;
+            
+            document.getElementById('piece-modal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('piece-modal').classList.remove('active');
+        }
+        
+        async function savePiece(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('piece-id').value;
+            const data = {
+                title: document.getElementById('piece-title').value,
+                description: document.getElementById('piece-description').value,
+                price: Math.round(parseFloat(document.getElementById('piece-price').value) * 100),
+                category: document.getElementById('piece-category').value,
+                dimensions: document.getElementById('piece-dimensions').value || null,
+                weight_oz: parseInt(document.getElementById('piece-weight').value) || 16,
+                is_featured: document.getElementById('piece-featured').checked,
+            };
+            
+            const imageUrl = document.getElementById('piece-image').value;
+            
+            try {
+                let pieceId = id;
+                
+                if (id) {
+                    // Update existing
+                    await fetch(`${API.baseUrl}/api/admin/pieces/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Admin-Password': adminPassword
+                        },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // Create new
+                    const res = await fetch(`${API.baseUrl}/api/admin/pieces`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Admin-Password': adminPassword
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    const newPiece = await res.json();
+                    pieceId = newPiece.id;
+                    
+                    // Add image
+                    if (imageUrl) {
+                        await fetch(`${API.baseUrl}/api/admin/pieces/${pieceId}/images?image_url=${encodeURIComponent(imageUrl)}&is_primary=true`, {
+                            method: 'POST',
+                            headers: { 'X-Admin-Password': adminPassword }
+                        });
+                    }
+                }
+                
+                closeModal();
+                await loadPieces();
+                updateStats();
+                alert(id ? 'Piece updated!' : 'Piece added!');
+                
+            } catch (e) {
+                alert('Error saving piece: ' + e.message);
+            }
+        }
+        
+        async function deletePiece(id) {
+            if (!confirm('Are you sure you want to delete this piece? This cannot be undone.')) return;
+            
+            try {
+                await fetch(`${API.baseUrl}/api/admin/pieces/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Admin-Password': adminPassword }
+                });
+                await loadPieces();
+                updateStats();
+            } catch (e) {
+                alert('Error deleting piece: ' + e.message);
+            }
+        }
+        
+        async function markSold(id) {
+            await updatePieceStatus(id, { is_sold: true });
+        }
+        
+        async function markAvailable(id) {
+            await updatePieceStatus(id, { is_sold: false });
+        }
+        
+        async function updatePieceStatus(id, data) {
+            try {
+                await fetch(`${API.baseUrl}/api/admin/pieces/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Password': adminPassword
+                    },
+                    body: JSON.stringify(data)
+                });
+                await loadPieces();
+                updateStats();
+            } catch (e) {
+                alert('Error updating piece: ' + e.message);
+            }
+        }
+        
+        // Order Modal
+        function viewOrder(id) {
+            const order = allOrders.find(o => o.id === id);
+            if (!order) return;
+            
+            const addr = order.shipping_address;
+            
+            document.getElementById('order-detail-content').innerHTML = `
+                <div style="margin-bottom: 1.5rem;">
+                    <h3>Order #${order.id}</h3>
+                    <span class="badge badge-${order.status}">${order.status}</span>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Customer</h4>
+                    <p><strong>${order.customer_name}</strong></p>
+                    <p>${order.customer_email}</p>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Ship To</h4>
+                    <p>${addr.name}</p>
+                    <p>${addr.street}</p>
+                    <p>${addr.city}, ${addr.state} ${addr.zip}</p>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Items</h4>
+                    ${order.items?.map(item => `
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
+                            <span>${item.title}</span>
+                            <span>${Utils.formatPrice(item.price)}</span>
+                        </div>
+                    `).join('') || '<p>No items</p>'}
+                </div>
+                
+                <div style="border-top: 2px solid #000; padding-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Subtotal</span>
+                        <span>${Utils.formatPrice(order.subtotal)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Shipping</span>
+                        <span>${Utils.formatPrice(order.shipping_cost)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold;">
+                        <span>Total</span>
+                        <span>${Utils.formatPrice(order.total)}</span>
+                    </div>
+                </div>
+                
+                ${order.tracking_number ? `
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #f5f5f5;">
+                        <strong>Tracking:</strong> ${order.tracking_number}
+                    </div>
+                ` : ''}
+                
+                ${order.status === 'paid' ? `
+                    <div style="margin-top: 1.5rem;">
+                        <div class="form-group">
+                            <label>Tracking Number</label>
+                            <input type="text" id="tracking-input" placeholder="Enter tracking number">
+                        </div>
+                        <button class="btn btn-primary btn-full" onclick="shipOrder(${order.id})">Mark as Shipped</button>
+                    </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('order-modal').classList.add('active');
+        }
+        
+        function closeOrderModal() {
+            document.getElementById('order-modal').classList.remove('active');
+        }
+        
+        async function markShipped(id) {
+            viewOrder(id);
+        }
+        
+        async function shipOrder(id) {
+            const tracking = document.getElementById('tracking-input')?.value || '';
+            
+            try {
+                await fetch(`${API.baseUrl}/api/admin/orders/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Password': adminPassword
+                    },
+                    body: JSON.stringify({
+                        status: 'shipped',
+                        tracking_number: tracking,
+                        shipping_carrier: 'USPS'
+                    })
+                });
+                
+                closeOrderModal();
+                await loadOrders();
+                updateStats();
+                alert('Order marked as shipped!');
+                
+            } catch (e) {
+                alert('Error updating order: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -7,7 +7,7 @@
 
 const API = {
     // ⚠️ CHANGE THIS FOR PRODUCTION
-    baseUrl: 'https://ethereal-api.onrender.com',
+    baseUrl: 'http://localhost:8000',
     
     async request(endpoint, options = {}) {
         const url = `${this.baseUrl}${endpoint}`;
@@ -32,7 +32,7 @@ const API = {
     // Pieces
     async getPieces(params = {}) {
         const query = new URLSearchParams();
-        if (params.category) query.set('category', params.category);
+        if (params.category) query.set('category', 'painting');
         if (params.featured !== undefined) query.set('featured', params.featured);
         if (params.available !== undefined) query.set('available', params.available);
         if (params.sort) query.set('sort', params.sort);

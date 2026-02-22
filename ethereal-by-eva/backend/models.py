@@ -19,15 +19,15 @@ class Piece(Base):
     description: Mapped[str] = mapped_column(Text)
     price: Mapped[int] = mapped_column(Integer)  # Price in cents (e.g., 15000 = $150.00)
     
-    # Category: painting, pastel, crayon, marker, paper_mache
-    category: Mapped[str] = mapped_column(String(50))
+    # Category: painting
+    category: Mapped[str] = mapped_column(String(50))  # Only 'painting' allowed
     
     # Status
     is_sold: Mapped[bool] = mapped_column(Boolean, default=False)
     is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
     
     # Physical details (for shipping calculation)
-    dimensions: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # e.g., "24x36 inches"
+    dimensions: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # Always '12x12 inches'
     weight_oz: Mapped[int] = mapped_column(Integer, default=16)  # Weight in ounces
     
     # Timestamps
