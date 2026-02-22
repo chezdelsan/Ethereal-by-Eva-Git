@@ -51,16 +51,15 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5500"
     
     # CORS origins
-    # CORS origins
-cors_origins: list[str] = [
-    "http://localhost:5500",
-    "http://localhost:3000",
-    "http://127.0.0.1:5500",
-    "http://127.0.0.1:3000",
-    "https://etherealbyeva.com",
-    "https://www.etherealbyeva.com",
-    "https://ethereal-eva.onrender.com",
-]
+    cors_origins: list[str] = [
+        "http://localhost:5500",
+        "http://localhost:3000",
+        "http://127.0.0.1:5500",
+        "http://127.0.0.1:3000",
+        "https://etherealbyeva.com",
+        "https://www.etherealbyeva.com",
+        "https://ethereal-eva.onrender.com",
+    ]
     
     class Config:
         env_file = ".env"
