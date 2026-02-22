@@ -599,7 +599,7 @@
                 let pieceId = id;
                 
                 if (id) {
-                    // Update existing
+                    // Update existing piece
                     await fetch(`${API.baseUrl}/api/admin/pieces/${id}`, {
                         method: 'PUT',
                         headers: {
@@ -608,8 +608,28 @@
                         },
                         body: JSON.stringify(data)
                     });
+                    pieceId = id;
+                    
+                    // Update image - delete old and add new
+                    if (imageUrl) {
+                        const piece = allPieces.find(p => p.id === parseInt(id));
+                        if (piece && piece.images && piece.images.length > 0) {
+                            // Delete existing images
+                            for (const img of piece.images) {
+                                await fetch(`${API.baseUrl}/api/admin/pieces/${id}/images/${img.id}`, {
+                                    method: 'DELETE',
+                                    headers: { 'X-Admin-Password': adminPassword }
+                                });
+                            }
+                        }
+                        // Add new image
+                        await fetch(`${API.baseUrl}/api/admin/pieces/${pieceId}/images?image_url=${encodeURIComponent(imageUrl)}&is_primary=true`, {
+                            method: 'POST',
+                            headers: { 'X-Admin-Password': adminPassword }
+                        });
+                    }
                 } else {
-                    // Create new
+                    // Create new piece
                     const res = await fetch(`${API.baseUrl}/api/admin/pieces`, {
                         method: 'POST',
                         headers: {
