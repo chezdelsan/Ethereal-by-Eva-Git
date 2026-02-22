@@ -3,6 +3,7 @@ Checkout and payment routes.
 Handles Stripe checkout sessions, webhooks, and emails.
 """
 
+import json
 import stripe
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -139,14 +140,16 @@ async def create_checkout_session(
 async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     """Handle Stripe webhook events and send emails."""
     payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
     
     try:
-        event = stripe.Event.construct_from(
-            stripe.util.convert_to_stripe_object(stripe.util.json.loads(payload)),
-            stripe.api_key
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.stripe_webhook_secret
         )
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid payload: {e}")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(status_code=400, detail="Invalid signature")
     
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
