@@ -7,7 +7,7 @@
 
 const API = {
     // ⚠️ CHANGE THIS FOR PRODUCTION
-    baseUrl: 'https://etherealbyeva.com',
+    baseUrl: 'https://ethereal-api.onrender.com', // No trailing slash
     
     async request(endpoint, options = {}) {
         const url = `${this.baseUrl}${endpoint}`;
