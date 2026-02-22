@@ -119,24 +119,27 @@
     <script src="js/api.js"></script>
     <script src="js/main.js"></script>
     <script>
-        // Load sold pieces as "past pieces"
+        // Load sold pieces AND gallery-only pieces as "past pieces"
         async function loadPastPieces() {
             try {
-                const pieces = await API.getPieces({ available: false });
-                const soldPieces = pieces.pieces ? pieces.pieces.filter(p => p.is_sold) : [];
+                // Get all pieces and filter for sold or gallery_only
+                const response = await fetch(`${API.baseUrl}/api/pieces?per_page=100`);
+                const data = await response.json();
+                const allPieces = data.pieces || [];
+                const galleryPieces = allPieces.filter(p => p.is_sold || p.gallery_only);
                 
                 const grid = document.getElementById('past-pieces-grid');
                 
-                if (soldPieces.length === 0) {
+                if (galleryPieces.length === 0) {
                     grid.innerHTML = '<div class="empty-gallery"><p>Past pieces will appear here as artwork finds new homes.</p></div>';
                     return;
                 }
                 
-                grid.innerHTML = soldPieces.map(piece => {
-                    const img = piece.images?.[0]?.image_url || 'https://via.placeholder.com/400?text=Sold';
+                grid.innerHTML = galleryPieces.map(piece => {
+                    const img = piece.images?.[0]?.image_url || 'https://via.placeholder.com/400?text=Art';
                     return `
                         <div class="past-piece-card">
-                            <img src="${img}" alt="${piece.title}" title="${piece.title} - SOLD">
+                            <img src="${img}" alt="${piece.title}" title="${piece.title}${piece.gallery_only ? '' : ' - SOLD'}">
                         </div>
                     `;
                 }).join('');

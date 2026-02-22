@@ -36,6 +36,7 @@ class PieceBase(BaseModel):
 class PieceCreate(PieceBase):
     """Schema for creating a new piece."""
     is_featured: bool = False
+    gallery_only: bool = False
 
 
 class PieceUpdate(BaseModel):
@@ -43,6 +44,7 @@ class PieceUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     price: Optional[int] = None
+    gallery_only: Optional[bool] = None
     category: Optional[str] = None
     dimensions: Optional[str] = None
     weight_oz: Optional[int] = None
@@ -55,6 +57,7 @@ class PieceResponse(PieceBase):
     id: int
     is_sold: bool
     is_featured: bool
+    gallery_only: bool = False
     created_at: datetime
     images: List[PieceImageSchema] = []
     

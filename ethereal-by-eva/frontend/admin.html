@@ -322,6 +322,14 @@
                         </label>
                     </div>
                     
+                    <div class="form-group">
+                        <label class="form-checkbox">
+                            <input type="checkbox" id="piece-gallery-only">
+                            Gallery only (not for sale - just showcase)
+                        </label>
+                        <small style="display: block; margin-top: 0.25rem; color: #666;">Check this for past work or pieces you want to display but not sell</small>
+                    </div>
+                    
                     <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                         <button type="submit" class="btn btn-primary" style="flex: 1;">Save Piece</button>
                         <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
@@ -477,19 +485,24 @@
                                     <td>
                                         <strong>${piece.title}</strong>
                                         ${piece.is_featured ? '<span class="badge badge-featured">Featured</span>' : ''}
+                                        ${piece.gallery_only ? '<span class="badge" style="background:#e3f2fd;color:#1565c0;">Gallery Only</span>' : ''}
                                     </td>
                                     <td>${piece.category}</td>
                                     <td>${Utils.formatPrice(piece.price)}</td>
                                     <td>
-                                        ${piece.is_sold 
-                                            ? '<span class="badge badge-sold">Sold</span>' 
-                                            : '<span class="badge badge-available">Available</span>'}
+                                        ${piece.gallery_only 
+                                            ? '<span class="badge" style="background:#e3f2fd;color:#1565c0;">Showcase</span>'
+                                            : piece.is_sold 
+                                                ? '<span class="badge badge-sold">Sold</span>' 
+                                                : '<span class="badge badge-available">Available</span>'}
                                     </td>
                                     <td>
                                         <button class="btn-small" onclick="editPiece(${piece.id})">Edit</button>
-                                        ${piece.is_sold 
+                                        ${!piece.gallery_only && piece.is_sold 
                                             ? `<button class="btn-small" onclick="markAvailable(${piece.id})">Mark Available</button>`
-                                            : `<button class="btn-small" onclick="markSold(${piece.id})">Mark Sold</button>`}
+                                            : !piece.gallery_only 
+                                                ? `<button class="btn-small" onclick="markSold(${piece.id})">Mark Sold</button>`
+                                                : ''}
                                         <button class="btn-small danger" onclick="deletePiece(${piece.id})">Delete</button>
                                     </td>
                                 </tr>
@@ -571,6 +584,7 @@
             document.getElementById('piece-weight').value = piece.weight_oz;
             document.getElementById('piece-image').value = piece.images?.[0]?.image_url || '';
             document.getElementById('piece-featured').checked = piece.is_featured;
+            document.getElementById('piece-gallery-only').checked = piece.gallery_only || false;
             
             document.getElementById('piece-modal').classList.add('active');
         }
@@ -583,6 +597,7 @@
             e.preventDefault();
             
             const id = document.getElementById('piece-id').value;
+            const isGalleryOnly = document.getElementById('piece-gallery-only').checked;
             const data = {
                 title: document.getElementById('piece-title').value,
                 description: document.getElementById('piece-description').value,
@@ -591,6 +606,8 @@
                 dimensions: document.getElementById('piece-dimensions').value || null,
                 weight_oz: parseInt(document.getElementById('piece-weight').value) || 16,
                 is_featured: document.getElementById('piece-featured').checked,
+                is_sold: isGalleryOnly,  // Gallery-only pieces are marked as "sold" so they don't appear in shop
+                gallery_only: isGalleryOnly,
             };
             
             const imageUrl = document.getElementById('piece-image').value;
