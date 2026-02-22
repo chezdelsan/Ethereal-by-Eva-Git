@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery | Ethereal by Eva</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .gallery-hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .gallery-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+        }
+        .gallery-blurb {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #333;
+            font-style: italic;
+        }
+        .past-pieces-section {
+            padding: 4rem 2rem;
+            background: #f9f9f9;
+        }
+        .past-pieces-section h2 {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .past-pieces-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .past-piece-card {
+            aspect-ratio: 1;
+            overflow: hidden;
+        }
+        .past-piece-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .past-piece-card:hover img {
+            transform: scale(1.05);
+        }
+        .empty-gallery {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="/" class="logo">ETHEREAL BY EVA</a>
+            <nav class="nav">
+                <a href="/">Home</a>
+                <a href="/browse.html">Shop</a>
+                <a href="/browse.html?category=painting">Paintings</a>
+                <a href="/gallery.html" class="active">Gallery</a>
+            </nav>
+            <a href="/cart.html" class="cart-link">Cart</a>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="gallery-hero">
+            <h1>Gallery</h1>
+            <p class="gallery-blurb">
+                In a world filled to the brim with AI slop, Eva has been pushing the boundaries of her third eye for years; Spilling introspection, faith, and raw talent onto canvas after canvas. Every piece you see is unique, and a glimpse into the mind of the purest form of art.
+            </p>
+        </div>
+        
+        <section class="past-pieces-section">
+            <h2>Past Pieces</h2>
+            <div id="past-pieces-grid" class="past-pieces-grid">
+                <div class="empty-gallery">Loading...</div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>Shop</h4>
+                <a href="/browse.html">All Pieces</a>
+                <a href="/browse.html?category=painting">Paintings</a>
+                <a href="/browse.html?category=pastel">Pastels</a>
+            </div>
+            <div class="footer-section">
+                <h4>Info</h4>
+                <a href="/gallery.html">Gallery</a>
+                <a href="/shipping.html">Shipping</a>
+                <a href="/contact.html">Contact</a>
+            </div>
+            <div class="footer-section">
+                <h4>Connect</h4>
+                <a href="mailto:etherealbyeva@gmail.com">Email Us</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Ethereal by Eva. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Load sold pieces as "past pieces"
+        async function loadPastPieces() {
+            try {
+                const pieces = await API.getPieces({ available: false });
+                const soldPieces = pieces.pieces ? pieces.pieces.filter(p => p.is_sold) : [];
+                
+                const grid = document.getElementById('past-pieces-grid');
+                
+                if (soldPieces.length === 0) {
+                    grid.innerHTML = '<div class="empty-gallery"><p>Past pieces will appear here as artwork finds new homes.</p></div>';
+                    return;
+                }
+                
+                grid.innerHTML = soldPieces.map(piece => {
+                    const img = piece.images?.[0]?.image_url || 'https://via.placeholder.com/400?text=Sold';
+                    return `
+                        <div class="past-piece-card">
+                            <img src="${img}" alt="${piece.title}" title="${piece.title} - SOLD">
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (e) {
+                console.error('Failed to load past pieces:', e);
+                document.getElementById('past-pieces-grid').innerHTML = 
+                    '<div class="empty-gallery"><p>Past pieces will appear here as artwork finds new homes.</p></div>';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadPastPieces);
+    </script>
+</body>
+</html>

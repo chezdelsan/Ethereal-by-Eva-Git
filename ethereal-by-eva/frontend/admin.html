@@ -730,8 +730,8 @@
                     <h4 style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Items</h4>
                     ${order.items?.map(item => `
                         <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
-                            <span>${item.title}</span>
-                            <span>${Utils.formatPrice(item.price)}</span>
+                            <span>${item.title_at_purchase || item.title || 'Item'}</span>
+                            <span>${Utils.formatPrice(item.price_at_purchase || item.price || 0)}</span>
                         </div>
                     `).join('') || '<p>No items</p>'}
                 </div>
@@ -760,6 +760,14 @@
                 ${order.status === 'paid' ? `
                     <div style="margin-top: 1.5rem;">
                         <div class="form-group">
+                            <label>Shipping Carrier</label>
+                            <select id="carrier-input" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; margin-bottom: 1rem;">
+                                <option value="USPS">USPS</option>
+                                <option value="UPS">UPS</option>
+                                <option value="FedEx">FedEx</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>Tracking Number</label>
                             <input type="text" id="tracking-input" placeholder="Enter tracking number">
                         </div>
@@ -781,6 +789,7 @@
         
         async function shipOrder(id) {
             const tracking = document.getElementById('tracking-input')?.value || '';
+            const carrier = document.getElementById('carrier-input')?.value || 'USPS';
             
             try {
                 await fetch(`${API.baseUrl}/api/admin/orders/${id}`, {
@@ -792,7 +801,7 @@
                     body: JSON.stringify({
                         status: 'shipped',
                         tracking_number: tracking,
-                        shipping_carrier: 'USPS'
+                        shipping_carrier: carrier
                     })
                 });
                 
