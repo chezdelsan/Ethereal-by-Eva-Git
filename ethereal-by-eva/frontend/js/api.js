@@ -7,7 +7,7 @@
 
 const API = {
     // ⚠️ CHANGE THIS FOR PRODUCTION
-    baseUrl: 'http://localhost:8000',
+    baseUrl: 'https://etherealbyeva.com',
     
     async request(endpoint, options = {}) {
         const url = `${this.baseUrl}${endpoint}`;
