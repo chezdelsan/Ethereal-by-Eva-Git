@@ -38,7 +38,13 @@ app = FastAPI(
 # Configure CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins + ["*"],  # TODO: Restrict in production
+    allow_origins=[
+        "http://localhost:5500",
+        "http://localhost:3000",
+        "https://etherealbyeva.com",
+        "https://www.etherealbyeva.com",
+        "https://ethereal-frontend-ibkk.onrender.com",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
