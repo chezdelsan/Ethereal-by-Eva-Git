@@ -280,9 +280,10 @@
                     </div>
                     
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Price (in dollars) *</label>
-                            <input type="number" id="piece-price" required min="1" step="0.01" placeholder="150.00">
+                        <div class="form-group" id="price-group">
+                            <label>Price (in dollars) <span id="price-required">*</span></label>
+                            <input type="number" id="piece-price" min="0" step="0.01" placeholder="150.00">
+                            <small id="price-hint" style="display: none; color: #666;">Optional for gallery-only pieces</small>
                         </div>
                         <div class="form-group">
                             <label>Category *</label>
@@ -324,7 +325,7 @@
                     
                     <div class="form-group">
                         <label class="form-checkbox">
-                            <input type="checkbox" id="piece-gallery-only">
+                            <input type="checkbox" id="piece-gallery-only" onchange="toggleGalleryOnly()">
                             Gallery only (not for sale - just showcase)
                         </label>
                         <small style="display: block; margin-top: 0.25rem; color: #666;">Check this for past work or pieces you want to display but not sell</small>
@@ -567,7 +568,28 @@
             document.getElementById('piece-form').reset();
             document.getElementById('piece-id').value = '';
             document.getElementById('piece-weight').value = '16';
+            document.getElementById('piece-gallery-only').checked = false;
+            toggleGalleryOnly();
             document.getElementById('piece-modal').classList.add('active');
+        }
+        
+        function toggleGalleryOnly() {
+            const isGalleryOnly = document.getElementById('piece-gallery-only').checked;
+            const priceInput = document.getElementById('piece-price');
+            const priceRequired = document.getElementById('price-required');
+            const priceHint = document.getElementById('price-hint');
+            
+            if (isGalleryOnly) {
+                priceInput.removeAttribute('required');
+                priceInput.setAttribute('min', '0');
+                priceRequired.style.display = 'none';
+                priceHint.style.display = 'block';
+            } else {
+                priceInput.setAttribute('required', 'required');
+                priceInput.setAttribute('min', '1');
+                priceRequired.style.display = 'inline';
+                priceHint.style.display = 'none';
+            }
         }
         
         function editPiece(id) {
@@ -585,6 +607,7 @@
             document.getElementById('piece-image').value = piece.images?.[0]?.image_url || '';
             document.getElementById('piece-featured').checked = piece.is_featured;
             document.getElementById('piece-gallery-only').checked = piece.gallery_only || false;
+            toggleGalleryOnly();
             
             document.getElementById('piece-modal').classList.add('active');
         }
@@ -598,14 +621,25 @@
             
             const id = document.getElementById('piece-id').value;
             const isGalleryOnly = document.getElementById('piece-gallery-only').checked;
+            const priceValue = document.getElementById('piece-price').value;
+            
+            // Gallery-only pieces can have $0 price
+            const price = priceValue ? Math.round(parseFloat(priceValue) * 100) : 0;
+            
+            // Validate price for non-gallery pieces
+            if (!isGalleryOnly && price < 100) {
+                alert('Price must be at least $1.00 for pieces that are for sale.');
+                return;
+            }
+            
             const data = {
                 title: document.getElementById('piece-title').value,
                 description: document.getElementById('piece-description').value,
-                price: Math.round(parseFloat(document.getElementById('piece-price').value) * 100),
+                price: price,
                 category: document.getElementById('piece-category').value,
                 dimensions: document.getElementById('piece-dimensions').value || null,
                 weight_oz: parseInt(document.getElementById('piece-weight').value) || 16,
-                is_featured: document.getElementById('piece-featured').checked,
+                is_featured: isGalleryOnly ? false : document.getElementById('piece-featured').checked, // Gallery-only can't be featured
                 is_sold: isGalleryOnly,  // Gallery-only pieces are marked as "sold" so they don't appear in shop
                 gallery_only: isGalleryOnly,
             };
