@@ -443,8 +443,9 @@
         }
         
         function updateStats() {
-            const available = allPieces.filter(p => !p.is_sold).length;
-            const sold = allPieces.filter(p => p.is_sold).length;
+            const available = allPieces.filter(p => !p.is_sold && !p.gallery_only).length;
+            const sold = allPieces.filter(p => p.is_sold && !p.gallery_only).length;
+            const galleryOnly = allPieces.filter(p => p.gallery_only).length;
             const revenue = allOrders
                 .filter(o => o.status === 'paid' || o.status === 'shipped')
                 .reduce((sum, o) => sum + o.total, 0);
