@@ -119,18 +119,16 @@
     <script src="js/api.js"></script>
     <script src="js/main.js"></script>
     <script>
-        // Load sold pieces AND gallery-only pieces as "past pieces"
+        // Load sold pieces AND gallery-only pieces
         async function loadPastPieces() {
             try {
-                // Get all pieces and filter for sold or gallery_only
-                const response = await fetch(`${API.baseUrl}/api/pieces?per_page=100`);
-                const data = await response.json();
-                const allPieces = data.pieces || [];
-                const galleryPieces = allPieces.filter(p => p.is_sold || p.gallery_only);
+                // Use the dedicated gallery endpoint
+                const response = await fetch(`${API.baseUrl}/api/gallery/pieces`);
+                const galleryPieces = await response.json();
                 
                 const grid = document.getElementById('past-pieces-grid');
                 
-                if (galleryPieces.length === 0) {
+                if (!galleryPieces || galleryPieces.length === 0) {
                     grid.innerHTML = '<div class="empty-gallery"><p>Past pieces will appear here as artwork finds new homes.</p></div>';
                     return;
                 }
@@ -145,7 +143,7 @@
                 }).join('');
                 
             } catch (e) {
-                console.error('Failed to load past pieces:', e);
+                console.error('Failed to load gallery pieces:', e);
                 document.getElementById('past-pieces-grid').innerHTML = 
                     '<div class="empty-gallery"><p>Past pieces will appear here as artwork finds new homes.</p></div>';
             }
