@@ -181,11 +181,12 @@ async def get_gallery_pieces(
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get pieces for gallery page - sold OR gallery_only pieces."""
+    """Get pieces for gallery page - sold OR gallery_only pieces that are set to show."""
     query = (
         select(Piece)
         .options(selectinload(Piece.images))
         .where(or_(Piece.is_sold == True, Piece.gallery_only == True))
+        .where(Piece.show_in_gallery == True)
         .order_by(Piece.created_at.desc())
         .limit(limit)
     )

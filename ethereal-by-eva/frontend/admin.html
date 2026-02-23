@@ -481,6 +481,7 @@
                     <tbody>
                         ${allPieces.map(piece => {
                             const img = piece.images?.[0]?.image_url || 'https://via.placeholder.com/60?text=No+Image';
+                            const showInGallery = piece.show_in_gallery !== false; // default true
                             return `
                                 <tr>
                                     <td><img src="${img}" alt="${piece.title}"></td>
@@ -488,6 +489,7 @@
                                         <strong>${piece.title}</strong>
                                         ${piece.is_featured ? '<span class="badge badge-featured">Featured</span>' : ''}
                                         ${piece.gallery_only ? '<span class="badge" style="background:#e3f2fd;color:#1565c0;">Gallery Only</span>' : ''}
+                                        ${piece.is_sold && !piece.gallery_only && !showInGallery ? '<span class="badge" style="background:#f5f5f5;color:#666;">Hidden</span>' : ''}
                                     </td>
                                     <td>${piece.category}</td>
                                     <td>${Utils.formatPrice(piece.price)}</td>
@@ -500,9 +502,14 @@
                                     </td>
                                     <td>
                                         <button class="btn-small" onclick="editPiece(${piece.id})">Edit</button>
+                                        ${piece.is_sold && !piece.gallery_only
+                                            ? (showInGallery 
+                                                ? `<button class="btn-small" onclick="hideFromGallery(${piece.id})">Hide from Gallery</button>`
+                                                : `<button class="btn-small" onclick="showInGallery(${piece.id})">Show in Gallery</button>`)
+                                            : ''}
                                         ${!piece.gallery_only && piece.is_sold 
                                             ? `<button class="btn-small" onclick="markAvailable(${piece.id})">Mark Available</button>`
-                                            : !piece.gallery_only 
+                                            : !piece.gallery_only && !piece.is_sold
                                                 ? `<button class="btn-small" onclick="markSold(${piece.id})">Mark Sold</button>`
                                                 : ''}
                                         <button class="btn-small danger" onclick="deletePiece(${piece.id})">Delete</button>
@@ -733,6 +740,14 @@
         
         async function markAvailable(id) {
             await updatePieceStatus(id, { is_sold: false });
+        }
+        
+        async function hideFromGallery(id) {
+            await updatePieceStatus(id, { show_in_gallery: false });
+        }
+        
+        async function showInGallery(id) {
+            await updatePieceStatus(id, { show_in_gallery: true });
         }
         
         async function updatePieceStatus(id, data) {
