@@ -21,6 +21,11 @@ stripe.api_key = settings.stripe_secret_key
 router = APIRouter(prefix="/api", tags=["checkout"])
 
 
+def get_effective_price(piece):
+    """Get the price to charge - sale_price if set, otherwise regular price."""
+    return piece.sale_price if piece.sale_price else piece.price
+
+
 @router.post("/shipping/rates", response_model=List[ShippingRate])
 async def get_shipping_rates(
     request: ShippingRateRequest,
@@ -56,7 +61,8 @@ async def create_checkout_session(
         if piece.is_sold:
             raise HTTPException(status_code=400, detail=f"'{piece.title}' is no longer available")
     
-    subtotal = sum(p.price for p in pieces)
+    # Use effective price (sale_price if set, otherwise regular price)
+    subtotal = sum(get_effective_price(p) for p in pieces)
     shipping_cost = 1295
     total = subtotal + shipping_cost
     
@@ -64,7 +70,7 @@ async def create_checkout_session(
         {
             "price_data": {
                 "currency": "usd",
-                "unit_amount": piece.price,
+                "unit_amount": get_effective_price(piece),
                 "product_data": {
                     "name": piece.title,
                     "description": f"One-of-a-kind {piece.category} - {piece.dimensions or 'Original artwork'}",
@@ -108,7 +114,7 @@ async def create_checkout_session(
         db.add(OrderItem(
             order_id=order.id,
             piece_id=piece.id,
-            price_at_purchase=piece.price,
+            price_at_purchase=get_effective_price(piece),
             title_at_purchase=piece.title,
         ))
     
@@ -174,7 +180,8 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
                         piece = piece_result.scalar_one_or_none()
                         if piece:
                             piece.is_sold = True
-                            items.append({"title": piece.title, "price": piece.price})
+                            # Use effective price for email
+                            items.append({"title": piece.title, "price": get_effective_price(piece)})
                 
                 await db.commit()
                 

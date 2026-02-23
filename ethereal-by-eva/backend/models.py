@@ -18,6 +18,7 @@ class Piece(Base):
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text)
     price: Mapped[int] = mapped_column(Integer)  # Price in cents (e.g., 15000 = $150.00)
+    sale_price: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Sale price in cents, null if no sale
     
     # Category: painting
     category: Mapped[str] = mapped_column(String(50))  # Only 'painting' allowed

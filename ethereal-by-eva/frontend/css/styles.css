@@ -867,3 +867,42 @@ img {
         height: 200px;
     }
 }
+
+/* 
+ * SALE PRICE ADDITIONS
+ * Add these styles to your existing styles.css file
+ */
+
+/* Sale badge on piece cards */
+.sale-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: linear-gradient(135deg, #c00 0%, #e44 100%);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.4rem 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    z-index: 10;
+}
+
+/* Sale price display on cards */
+.piece-card-price.on-sale {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.2rem;
+}
+
+.piece-card-price.on-sale .original-price {
+    text-decoration: line-through;
+    color: #999;
+    font-size: 0.8rem;
+}
+
+.piece-card-price.on-sale .sale-price {
+    color: #c00;
+    font-weight: 500;
+}
