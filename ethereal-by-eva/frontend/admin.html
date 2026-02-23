@@ -285,6 +285,14 @@
                             <input type="number" id="piece-price" min="0" step="0.01" placeholder="150.00">
                             <small id="price-hint" style="display: none; color: #666;">Optional for gallery-only pieces</small>
                         </div>
+                        <div class="form-group" id="sale-price-group">
+                            <label>Sale Price (optional)</label>
+                            <input type="number" id="piece-sale-price" min="0" step="0.01" placeholder="99.00">
+                            <small style="color: #666;">Leave empty for no sale</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
                         <div class="form-group">
                             <label>Category *</label>
                             <select id="piece-category" required>
@@ -296,18 +304,16 @@
                                 <option value="paper_mache">Paper Maché</option>
                             </select>
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
                         <div class="form-group">
                             <label>Dimensions</label>
                             <input type="text" id="piece-dimensions" placeholder="e.g., 18x24 inches">
                         </div>
-                        <div class="form-group">
-                            <label>Weight (ounces)</label>
-                            <input type="number" id="piece-weight" min="1" value="16" placeholder="16">
-                            <small>For shipping calculation</small>
-                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Weight (ounces)</label>
+                        <input type="number" id="piece-weight" min="1" value="16" placeholder="16">
+                        <small>For shipping calculation</small>
                     </div>
                     
                     <div class="form-group">
@@ -481,7 +487,8 @@
                     <tbody>
                         ${allPieces.map(piece => {
                             const img = piece.images?.[0]?.image_url || 'https://via.placeholder.com/60?text=No+Image';
-                            const showInGallery = piece.show_in_gallery !== false; // default true
+                            const showInGallery = piece.show_in_gallery !== false;
+                            const hasSale = piece.sale_price && piece.sale_price > 0;
                             return `
                                 <tr>
                                     <td><img src="${img}" alt="${piece.title}"></td>
@@ -489,10 +496,15 @@
                                         <strong>${piece.title}</strong>
                                         ${piece.is_featured ? '<span class="badge badge-featured">Featured</span>' : ''}
                                         ${piece.gallery_only ? '<span class="badge" style="background:#e3f2fd;color:#1565c0;">Gallery Only</span>' : ''}
+                                        ${hasSale ? '<span class="badge" style="background:#ffe0e0;color:#c00;">On Sale</span>' : ''}
                                         ${piece.is_sold && !piece.gallery_only && !showInGallery ? '<span class="badge" style="background:#f5f5f5;color:#666;">Hidden</span>' : ''}
                                     </td>
                                     <td>${piece.category}</td>
-                                    <td>${Utils.formatPrice(piece.price)}</td>
+                                    <td>
+                                        ${hasSale 
+                                            ? `<span style="text-decoration: line-through; color: #999;">${Utils.formatPrice(piece.price)}</span> <strong style="color:#c00;">${Utils.formatPrice(piece.sale_price)}</strong>`
+                                            : Utils.formatPrice(piece.price)}
+                                    </td>
                                     <td>
                                         ${piece.gallery_only 
                                             ? '<span class="badge" style="background:#e3f2fd;color:#1565c0;">Showcase</span>'
@@ -576,6 +588,7 @@
             document.getElementById('piece-form').reset();
             document.getElementById('piece-id').value = '';
             document.getElementById('piece-weight').value = '16';
+            document.getElementById('piece-sale-price').value = '';
             document.getElementById('piece-gallery-only').checked = false;
             toggleGalleryOnly();
             document.getElementById('piece-modal').classList.add('active');
@@ -609,6 +622,7 @@
             document.getElementById('piece-title').value = piece.title;
             document.getElementById('piece-description').value = piece.description;
             document.getElementById('piece-price').value = (piece.price / 100).toFixed(2);
+            document.getElementById('piece-sale-price').value = piece.sale_price ? (piece.sale_price / 100).toFixed(2) : '';
             document.getElementById('piece-category').value = piece.category;
             document.getElementById('piece-dimensions').value = piece.dimensions || '';
             document.getElementById('piece-weight').value = piece.weight_oz;
@@ -630,9 +644,11 @@
             const id = document.getElementById('piece-id').value;
             const isGalleryOnly = document.getElementById('piece-gallery-only').checked;
             const priceValue = document.getElementById('piece-price').value;
+            const salePriceValue = document.getElementById('piece-sale-price').value;
             
             // Gallery-only pieces can have $0 price
             const price = priceValue ? Math.round(parseFloat(priceValue) * 100) : 0;
+            const salePrice = salePriceValue ? Math.round(parseFloat(salePriceValue) * 100) : null;
             
             // Validate price for non-gallery pieces
             if (!isGalleryOnly && price < 100) {
@@ -640,15 +656,22 @@
                 return;
             }
             
+            // Validate sale price is less than regular price
+            if (salePrice && salePrice >= price) {
+                alert('Sale price must be less than the regular price.');
+                return;
+            }
+            
             const data = {
                 title: document.getElementById('piece-title').value,
                 description: document.getElementById('piece-description').value,
                 price: price,
+                sale_price: salePrice,
                 category: document.getElementById('piece-category').value,
                 dimensions: document.getElementById('piece-dimensions').value || null,
                 weight_oz: parseInt(document.getElementById('piece-weight').value) || 16,
-                is_featured: isGalleryOnly ? false : document.getElementById('piece-featured').checked, // Gallery-only can't be featured
-                is_sold: isGalleryOnly,  // Gallery-only pieces are marked as "sold" so they don't appear in shop
+                is_featured: isGalleryOnly ? false : document.getElementById('piece-featured').checked,
+                is_sold: isGalleryOnly,
                 gallery_only: isGalleryOnly,
             };
             

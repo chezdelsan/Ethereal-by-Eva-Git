@@ -38,6 +38,7 @@ class PieceCreate(PieceBase):
     is_featured: bool = False
     gallery_only: bool = False
     show_in_gallery: bool = True
+    sale_price: Optional[int] = None
 
 
 class PieceUpdate(BaseModel):
@@ -45,6 +46,7 @@ class PieceUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     price: Optional[int] = None
+    sale_price: Optional[int] = None
     gallery_only: Optional[bool] = None
     show_in_gallery: Optional[bool] = None
     category: Optional[str] = None
@@ -61,8 +63,14 @@ class PieceResponse(PieceBase):
     is_featured: bool
     gallery_only: bool = False
     show_in_gallery: bool = True
+    sale_price: Optional[int] = None
     created_at: datetime
     images: List[PieceImageSchema] = []
+    
+    # Computed field for the actual price to charge (sale or regular)
+    @property
+    def effective_price(self) -> int:
+        return self.sale_price if self.sale_price else self.price
     
     # Computed field for primary image
     @property

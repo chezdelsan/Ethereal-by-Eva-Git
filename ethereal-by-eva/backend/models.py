@@ -27,6 +27,7 @@ class Piece(Base):
     is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
     gallery_only: Mapped[bool] = mapped_column(Boolean, default=False)
     show_in_gallery: Mapped[bool] = mapped_column(Boolean, default=True)  # Hide sold pieces from gallery
+    sale_price: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Sale price in cents, null if no sale
     
     # Physical details (for shipping calculation)
     dimensions: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # Always '12x12 inches'
