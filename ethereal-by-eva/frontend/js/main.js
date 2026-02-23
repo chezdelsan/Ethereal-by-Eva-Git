@@ -120,32 +120,15 @@ function renderPieceCard(piece) {
         imageUrl = primary ? primary.image_url : piece.images[0].image_url;
     }
     
-    // Check if piece is on sale
-    const isOnSale = piece.sale_price && piece.sale_price > 0;
-    
-    // Build price display
-    let priceHtml;
-    if (isOnSale) {
-        priceHtml = `
-            <span class="piece-card-price on-sale">
-                <span class="original-price">${Utils.formatPrice(piece.price)}</span>
-                <span class="sale-price">${Utils.formatPrice(piece.sale_price)}</span>
-            </span>
-        `;
-    } else {
-        priceHtml = `<span class="piece-card-price">${Utils.formatPrice(piece.price)}</span>`;
-    }
-    
     return `
-        <a href="piece.html?id=${piece.id}" class="piece-card ${piece.is_sold ? 'sold' : ''}">
+        <a href="piece.html?id=${piece.id}" class="piece-card">
             <div class="piece-card-image">
                 <img src="${imageUrl}" alt="${piece.title}" loading="lazy">
                 ${piece.is_sold ? '<span class="piece-card-sold">Sold</span>' : ''}
-                ${isOnSale && !piece.is_sold ? '<span class="sale-badge">Sale</span>' : ''}
             </div>
             <div class="piece-card-info">
                 <h3 class="piece-card-title">${piece.title}</h3>
-                ${priceHtml}
+                <span class="piece-card-price">${Utils.formatPrice(piece.price)}</span>
             </div>
         </a>
     `;

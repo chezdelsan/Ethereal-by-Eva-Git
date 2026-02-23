@@ -308,33 +308,6 @@ img {
     color: var(--color-text-light);
 }
 
-.piece-card-price.on-sale .original-price {
-    text-decoration: line-through;
-    color: #999;
-    font-size: 0.85rem;
-    margin-right: 0.5rem;
-}
-
-.piece-card-price.on-sale .sale-price {
-    color: #c00;
-    font-weight: 500;
-}
-
-.sale-badge {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    background: linear-gradient(135deg, #c00 0%, #e44 100%);
-    color: white;
-    font-size: 0.65rem;
-    font-weight: 600;
-    padding: 0.4rem 0.6rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    z-index: 10;
-    box-shadow: 0 2px 8px rgba(200, 0, 0, 0.3);
-}
-
 /* Sold Badge */
 .piece-card.sold::before {
     content: 'SOLD';

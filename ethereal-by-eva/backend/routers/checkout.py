@@ -56,11 +56,7 @@ async def create_checkout_session(
         if piece.is_sold:
             raise HTTPException(status_code=400, detail=f"'{piece.title}' is no longer available")
     
-    # Use sale_price if available, otherwise regular price
-    def get_effective_price(piece):
-        return piece.sale_price if piece.sale_price else piece.price
-    
-    subtotal = sum(get_effective_price(p) for p in pieces)
+    subtotal = sum(p.price for p in pieces)
     shipping_cost = 1295
     total = subtotal + shipping_cost
     
@@ -68,7 +64,7 @@ async def create_checkout_session(
         {
             "price_data": {
                 "currency": "usd",
-                "unit_amount": get_effective_price(piece),
+                "unit_amount": piece.price,
                 "product_data": {
                     "name": piece.title,
                     "description": f"One-of-a-kind {piece.category} - {piece.dimensions or 'Original artwork'}",
@@ -112,7 +108,7 @@ async def create_checkout_session(
         db.add(OrderItem(
             order_id=order.id,
             piece_id=piece.id,
-            price_at_purchase=get_effective_price(piece),
+            price_at_purchase=piece.price,
             title_at_purchase=piece.title,
         ))
     
@@ -178,9 +174,7 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
                         piece = piece_result.scalar_one_or_none()
                         if piece:
                             piece.is_sold = True
-                            # Use effective price (sale or regular)
-                            effective_price = piece.sale_price if piece.sale_price else piece.price
-                            items.append({"title": piece.title, "price": effective_price})
+                            items.append({"title": piece.title, "price": piece.price})
                 
                 await db.commit()
                 
