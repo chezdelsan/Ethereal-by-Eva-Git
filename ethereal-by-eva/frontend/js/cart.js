@@ -63,10 +63,15 @@ const Cart = {
             imageUrl = primary ? primary.image_url : piece.images[0].image_url;
         }
         
+        // Use sale price if available
+        let finalPrice = piece.price;
+        if (typeof piece.sale_price === 'number' && piece.sale_price > 0 && !piece.is_sold) {
+            finalPrice = piece.sale_price;
+        }
         items.push({
             piece_id: piece.id,
             title: piece.title,
-            price: piece.price,
+            price: finalPrice,
             image_url: imageUrl,
             added_at: new Date().toISOString(),
         });

@@ -67,10 +67,14 @@ async def validate_cart(
         if not image_url and piece.images:
             image_url = piece.images[0].image_url
         
+        # Use sale price if available and valid
+        final_price = piece.price
+        if piece.sale_price is not None and piece.sale_price > 0 and not piece.is_sold:
+            final_price = piece.sale_price
         items.append(CartItem(
             piece_id=piece.id,
             title=piece.title,
-            price=piece.price,
+            price=final_price,
             image_url=image_url
         ))
     
