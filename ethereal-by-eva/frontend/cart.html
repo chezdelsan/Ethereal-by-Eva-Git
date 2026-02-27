@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cart | Ethereal by Eva</title>
     <meta name="description" content="Your shopping cart.">
-               <a href="gallery.html">Gallery</a>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <header class="header">
@@ -15,7 +15,7 @@
                 <a href="/">Home</a>
                 <a href="browse.html">Shop</a>
                 <a href="browse.html?category=painting">Paintings</a>
-                <a href="browse.html?category=pastel">Pastels</a>
+                <a href="gallery.html">Gallery</a>
             </nav>
             <div class="header-actions">
                 <a href="cart.html" class="cart-link active">
@@ -26,11 +26,11 @@
     </header>
     
     <main>
-        <div class="container">
-            <h1 style="margin-bottom: var(--spacing-xl);">Your Cart</h1>
-               <a href="about.html">About</a>
-               <a href="contact.html">Contact</a>
-               <a href="shipping.html">Shipping</a>
+        <div class="container" style="padding-top: var(--spacing-lg); padding-bottom: var(--spacing-lg);">
+            <h1 style="margin-bottom: var(--spacing-md);">Your Cart</h1>
+            <div id="cart-content">
+                <div class="loading">Loading</div>
+            </div>
         </div>
     </main>
     
@@ -38,9 +38,9 @@
         <div class="container footer-inner">
             <p class="footer-text">© 2024 Ethereal by Eva. All pieces are one-of-a-kind.</p>
             <div class="footer-links">
-                <a href="#">About</a>
-                <a href="#">Contact</a>
-                <a href="#">Shipping</a>
+                <a href="gallery.html">Gallery</a>
+                <a href="contact.html">Contact</a>
+                <a href="shipping.html">Shipping</a>
             </div>
         </div>
     </footer>
@@ -54,7 +54,8 @@
         function renderEmptyCart() {
             cartContent.innerHTML = `
                 <div class="cart-empty">
-                    <p>Your cart is empty.</p>
+                    <h2>Your cart is empty</h2>
+                    <p style="margin-bottom: var(--spacing-md);">Looks like you haven't added any pieces yet.</p>
                     <a href="browse.html" class="btn btn-primary">Continue Shopping</a>
                 </div>
             `;
@@ -69,7 +70,7 @@
             const subtotal = items.reduce((sum, item) => sum + item.price, 0);
             
             cartContent.innerHTML = `
-                <div class="cart-layout">
+                <div class="cart-container">
                     <div class="cart-items">
                         ${items.map(item => `
                             <div class="cart-item" data-piece-id="${item.piece_id}">
@@ -79,10 +80,8 @@
                                     </a>
                                 </div>
                                 <div class="cart-item-info">
-                                    <h3><a href="piece.html?id=${item.piece_id}">${item.title}</a></h3>
-                                    <p>One-of-a-kind piece</p>
-                                </div>
-                                <div class="cart-item-actions">
+                                    <h3 class="cart-item-title"><a href="piece.html?id=${item.piece_id}">${item.title}</a></h3>
+                                    <p style="color: var(--color-text-light);">One-of-a-kind piece</p>
                                     <span class="cart-item-price">${Utils.formatPrice(item.price)}</span>
                                     <button type="button" class="cart-item-remove" data-piece-id="${item.piece_id}">Remove</button>
                                 </div>
@@ -98,15 +97,15 @@
                         </div>
                         <div class="cart-summary-row">
                             <span>Shipping</span>
-                            <span>Calculated at checkout</span>
+                            <span>$12.95</span>
                         </div>
-                        <div class="cart-summary-row total">
+                        <div class="cart-summary-row cart-summary-total">
                             <span>Total</span>
-                            <span>${Utils.formatPrice(subtotal)}</span>
+                            <span>${Utils.formatPrice(subtotal + 1295)}</span>
                         </div>
-                        <a href="checkout.html" class="btn btn-primary btn-full">Proceed to Checkout</a>
+                        <a href="checkout.html" class="btn btn-primary btn-full" style="margin-top: var(--spacing-md);">Proceed to Checkout</a>
                         <p style="text-align: center; margin-top: var(--spacing-md);">
-                            <a href="browse.html" style="color: var(--color-text-light); text-decoration: underline;">Continue Shopping</a>
+                            <a href="browse.html" style="color: var(--color-text-light);">Continue Shopping</a>
                         </p>
                     </div>
                 </div>

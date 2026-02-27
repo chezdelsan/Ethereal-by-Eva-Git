@@ -33,7 +33,7 @@
     <main>
         <div class="container">
             <!-- Breadcrumb -->
-            <nav style="margin-bottom: var(--spacing-xl); font-size: var(--font-size-sm); color: var(--color-text-light);">
+            <nav style="margin-bottom: var(--spacing-md); padding-top: var(--spacing-md); font-size: 0.9rem; color: var(--color-text-light);">
                 <a href="/">Home</a> / 
                 <a href="browse.html">Shop</a> / 
                 <span id="breadcrumb-category"></span>
@@ -74,6 +74,26 @@
             const content = document.getElementById('piece-content');
             const inCart = Cart.hasItem(piece.id);
             
+            // Check if on sale
+            const isOnSale = piece.sale_price && piece.sale_price > 0 && !piece.is_sold;
+            
+            // Build price display
+            let priceHtml;
+            if (isOnSale) {
+                priceHtml = `
+                    <p class="piece-price">
+                        <span style="text-decoration: line-through; color: #999; font-size: 1.2rem;">${Utils.formatPrice(piece.price)}</span>
+                        <span style="color: #c00; margin-left: 0.5rem;">${Utils.formatPrice(piece.sale_price)}</span>
+                        <span style="background: #c00; color: white; font-size: 0.7rem; padding: 0.3rem 0.6rem; margin-left: 0.5rem; text-transform: uppercase;">Sale</span>
+                    </p>
+                `;
+            } else {
+                priceHtml = `<p class="piece-price">${Utils.formatPrice(piece.price)}</p>`;
+            }
+            
+            // Use sale_price for cart if available
+            const cartPrice = isOnSale ? piece.sale_price : piece.price;
+            
             content.innerHTML = `
                 <div class="piece-detail">
                     <!-- Gallery -->
@@ -89,15 +109,14 @@
                     <!-- Info -->
                     <div class="piece-info">
                         <h1>${piece.title}</h1>
-                        <p class="piece-price">${Utils.formatPrice(piece.price)}</p>
+                        ${priceHtml}
                         
                         <p class="piece-description">${piece.description}</p>
                         
-                        <dl class="piece-meta">
-                            <dt>Category:</dt>
-                            <dd><a href="browse.html?category=${piece.category}">${Utils.getCategoryName(piece.category)}</a></dd>
-                            ${piece.dimensions ? `<dt>Dimensions:</dt><dd>${piece.dimensions}</dd>` : ''}
-                        </dl>
+                        <div class="piece-meta">
+                            <p><span>Category</span><span><a href="browse.html?category=${piece.category}">${Utils.getCategoryName(piece.category)}</a></span></p>
+                            ${piece.dimensions ? `<p><span>Dimensions</span><span>${piece.dimensions}</span></p>` : ''}
+                        </div>
                         
                         ${piece.is_sold ? `
                             <button class="btn btn-primary btn-full" disabled>Sold</button>
@@ -108,6 +127,7 @@
                             <button 
                                 id="add-to-cart-btn"
                                 class="btn ${inCart ? 'btn-secondary' : 'btn-primary'} btn-full"
+                                data-price="${cartPrice}"
                                 ${inCart ? 'disabled' : ''}
                             >
                                 ${inCart ? 'In Your Cart' : 'Add to Cart'}
@@ -126,15 +146,21 @@
             // Bind add to cart button
             const addBtn = document.getElementById('add-to-cart-btn');
             if (addBtn && !piece.is_sold) {
-                addBtn.addEventListener('click', () => addToCart(piece));
+                addBtn.addEventListener('click', () => addToCart(piece, cartPrice));
             }
         }
         
         /**
          * Add piece to cart
          */
-        function addToCart(piece) {
-            const result = Cart.addItem(piece);
+        function addToCart(piece, cartPrice) {
+            // Use sale price if available
+            const pieceWithCorrectPrice = {
+                ...piece,
+                price: cartPrice
+            };
+            
+            const result = Cart.addItem(pieceWithCorrectPrice);
             
             if (result.success) {
                 // Update button
